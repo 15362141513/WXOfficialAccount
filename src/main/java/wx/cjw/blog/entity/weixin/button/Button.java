@@ -1,4 +1,4 @@
-package wx.cjw.blog.entity.weixin;
+package wx.cjw.blog.entity.weixin.button;
 
 import lombok.Data;
 
