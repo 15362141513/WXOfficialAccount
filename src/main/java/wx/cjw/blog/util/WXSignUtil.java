@@ -2,6 +2,7 @@ package wx.cjw.blog.util;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
+import wx.cjw.blog.entity.excetion.AesException;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -29,19 +30,28 @@ public class WXSignUtil {
             //闯将 MessageDigest对象，Message Digest 通过getInstance系列静态函数来进行实例化和初始化
             md = MessageDigest.getInstance("SHA-1");
             // 将三个参数字符串拼接成一个字符串进行sha- 加密
+            String s = content.toString();
+            byte[] digest = md.digest(s.getBytes());
+            StringBuffer hexstr = new StringBuffer();
+            String shaHex = "";
+            for (int i = 0; i < digest.length; i++) {
+                shaHex = Integer.toHexString(digest[i] & 0xFF);
+                if (shaHex.length() < 2) {
+                    hexstr.append(0);
+                }
+                hexstr.append(shaHex);
+            }
+            tmpStr = hexstr.toString();
 
-            byte[] digest = md.digest(content.toString().getBytes());
-
-            tmpStr = byteToString(digest);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
         log.info("执行微信加密认证");
         content = null;
-        log.info(tmpStr);
+        log.info(tmpStr.toUpperCase());
         log.info(signature.toUpperCase());
 
-        return tmpStr != null ? tmpStr.equals(signature.toUpperCase()) : false;
+        return tmpStr != null ? tmpStr.toUpperCase().equals(signature.toUpperCase()) : false;
     }
 
     private static String byteToString(byte[] bytes) {
@@ -68,5 +78,37 @@ public class WXSignUtil {
             if (n < b.length - 1) hs = hs + ":";
         }
         return hs.toUpperCase();
+    }
+
+
+    public String getSHA1(String token, String timestamp, String nonce) throws AesException {
+        try {
+            String[] array = new String[]{token, timestamp, nonce};
+            StringBuffer sb = new StringBuffer();
+            // 字符串排序
+            Arrays.sort(array);
+            for (int i = 0; i < 4; i++) {
+                sb.append(array[i]);
+            }
+            String str = sb.toString();
+            // SHA1签名生成
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+            md.update(str.getBytes());
+            byte[] digest = md.digest();
+
+            StringBuffer hexstr = new StringBuffer();
+            String shaHex = "";
+            for (int i = 0; i < digest.length; i++) {
+                shaHex = Integer.toHexString(digest[i] & 0xFF);
+                if (shaHex.length() < 2) {
+                    hexstr.append(0);
+                }
+                hexstr.append(shaHex);
+            }
+            return hexstr.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new AesException(AesException.ComputeSignatureError);
+        }
     }
 }

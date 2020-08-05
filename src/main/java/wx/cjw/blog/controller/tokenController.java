@@ -25,13 +25,11 @@ public class tokenController {
     @GetMapping("/")
     public String demo(String signature, String timestamp
             , String nonce, String echostr) {
-        log.info(signature);
+        log.info("signature: " + signature);
         log.info(timestamp);
         log.info(nonce);
         log.info(echostr);
-        boolean b = wxSignUtil.checkSignature(signature, timestamp, nonce);
-        log.info(b);
-        if (b) {
+        if (wxSignUtil.checkSignature(signature, timestamp, nonce)) {
             log.info("验证成功！");
             return echostr;
 
